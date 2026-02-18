@@ -12,27 +12,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        .recharts-text { font-size: 10px; font-weight: 600; fill: #64748b; }
-        .tab-active { background-color: white; color: #1d4ed8; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; }
+        .recharts-text { font-size: 10px; font-weight: 700; fill: #475569; }
+        .tab-active { background-color: #1d4ed8; color: white; box-shadow: 0 10px 15px -3px rgba(29, 78, 216, 0.2); }
         .loading-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
-        .btn-tab { transition: all 0.2s; border: 1px solid transparent; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); }
+        .stat-value { letter-spacing: -0.05em; }
     </style>
 </head>
 <body>
     <div id="root">
         <div class="loading-screen">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Initializing Dashboard...</p>
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-700 mb-4"></div>
+            <p class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Assembling Dashboard Data...</p>
         </div>
     </div>
 
     <script>
-        // Use a "wait for ready" strategy to prevent crashes
         const initApp = () => {
             if (!window.Recharts || !window.React || !window.ReactDOM) {
-                console.log("Libraries not ready, retrying...");
                 setTimeout(initApp, 100);
                 return;
             }
@@ -41,172 +40,213 @@
             const e = React.createElement;
             const { 
                 BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-                PieChart, Cell, Pie, RadarChart, PolarGrid, PolarAngleAxis, Radar 
+                PieChart, Cell, Pie, RadarChart, PolarGrid, PolarAngleAxis, Radar, LineChart, Line
             } = window.Recharts;
 
-            const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+            const COLORS = ['#1d4ed8', '#059669', '#d97706', '#7c3aed', '#dc2626'];
 
+            // Integrated Data from all 3 Session Forms
             const DATA = {
-                overall: {
-                    metrics: [
-                        { label: 'Expertise', val: '4.9/5', sub: 'Tech Knowledge', color: 'bg-blue-50 text-blue-600' },
-                        { label: 'Clarity', val: '4.8/5', sub: 'Instruction', color: 'bg-emerald-50 text-emerald-600' },
-                        { label: 'Engagement', val: '4.8/5', sub: 'Relevance', color: 'bg-indigo-50 text-indigo-600' },
-                        { label: 'Pacing', val: '4.7/5', sub: 'Hands-on Time', color: 'bg-amber-50 text-amber-600' }
+                performance: {
+                    overall: 4.93, // Combined "How you did" score
+                    expertise: 4.97,
+                    clarity: 4.93,
+                    relevance: 4.95, // Based on "classroom-ready examples"
+                    pacing: 4.75
+                },
+                confidence: {
+                    teaching: [
+                        { name: 'S1 Pre', score: 1.8 }, { name: 'S1 Post', score: 4.2 },
+                        { name: 'S3 Pre', score: 2.1 }, { name: 'S3 Post', score: 4.4 }
                     ],
-                    radar: [
-                        { subject: 'Expertise', A: 4.9 }, { subject: 'Clarity', A: 4.8 }, 
-                        { subject: 'Engagement', A: 4.8 }, { subject: 'Pacing', A: 4.7 }, 
-                        { subject: 'Examples', A: 4.9 }
-                    ]
+                    learnerUseComfort: 78, // % comfortable with pupils using AI in Glow
+                    asnImpact: 94 // % believe AI supports ASN learners
                 },
-                learners: {
-                    comfort: 78, asn: 94,
-                    sentiment: [
-                        { name: 'Future Careers', value: 42 }, { name: 'Value Skills/Unready', value: 35 }, 
-                        { name: 'Support Needed', value: 18 }, { name: 'Cautious', value: 5 }
-                    ]
-                },
-                confidence: [
-                    { name: 'S1 Pre', val: 1.8 }, { name: 'S1 Post', val: 4.2 },
-                    { name: 'S3 Pre', val: 2.1 }, { name: 'S3 Post', val: 4.4 }
+                sessionBreakdown: [
+                    { name: 'Session 1', expertise: 4.9, clarity: 4.8, relevance: 4.8, pacing: 4.6 },
+                    { name: 'Session 2', expertise: 5.0, clarity: 5.0, relevance: 5.0, pacing: 4.8 },
+                    { name: 'Session 3', expertise: 5.0, clarity: 5.0, relevance: 5.0, pacing: 4.9 }
                 ],
-                next: [
-                    "Subject-specific prompting for CfE levels",
-                    "Google Classroom workflow integration",
-                    "Ethical AI guidelines for pupil usage",
-                    "ASN-specific accessibility walkthroughs"
+                learnerSentiment: [
+                    { name: 'Essential Future Skill', value: 45 },
+                    { name: 'Valuable but Unready', value: 35 },
+                    { name: 'Needs Strict Scaffolding', value: 15 },
+                    { name: 'Not Comfortable', value: 5 }
+                ],
+                nextSteps: [
+                    "CfE-specific prompt libraries for Level 3/4",
+                    "Practical 'Choice Board' templates for ASN",
+                    "Glow Ethical Usage Framework for Pupils",
+                    "Google Workspace integration workshops"
                 ]
             };
 
-            const App = () => {
-                const [tab, setTab] = React.useState('overall');
+            const Icon = (name) => {
+                const paths = {
+                    award: 'M12 15l-3.39 1.89.65-3.78L6.51 10.5l3.79-.55L12 6.5l1.7 3.45 3.79.55-2.75 2.11.65 3.78z',
+                    users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m14 10v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 1 1 0 8',
+                    check: 'M20 6L9 17l-5-5'
+                };
+                return e('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 3, className: 'inline mr-2' },
+                    e('path', { d: paths[name] || '' })
+                );
+            };
 
-                const Header = e('header', { className: 'bg-white border-b border-slate-200 sticky top-0 z-50 py-4 shadow-sm' },
-                    e('div', { className: 'max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4' },
-                        e('div', null,
-                            e('h1', { className: 'text-xl font-black text-blue-700 uppercase tracking-tighter' }, 'Gemini Teacher Impact'),
-                            e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest' }, 'Education Technology Coach • Scotland')
-                        ),
-                        e('nav', { className: 'flex bg-slate-100 p-1 rounded-xl gap-1' },
-                            ['overall', 'learners', 'sessions', 'next'].map(t => 
-                                e('button', {
-                                    key: t,
-                                    onClick: () => setTab(t),
-                                    className: `px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider btn-tab ${tab === t ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`
-                                }, t === 'next' ? 'Next Steps' : t)
-                            )
-                        )
-                    )
+            const App = () => {
+                const [tab, setTab] = React.useState('how-you-did');
+
+                const NavButton = (id, label) => e('button', {
+                    onClick: () => setTab(id),
+                    className: `px-6 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${tab === id ? 'tab-active' : 'text-slate-500 hover:bg-slate-200'}`
+                }, label);
+
+                const StatCard = (title, value, sub, color) => e('div', { className: 'bg-white p-6 rounded-2xl border border-slate-200 card-shadow' },
+                    e('p', { className: 'text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter' }, title),
+                    e('h3', { className: `text-3xl font-black stat-value ${color}` }, value),
+                    e('p', { className: 'text-[10px] font-bold text-slate-500 mt-1 uppercase' }, sub)
                 );
 
-                const ContentOverall = e('div', { className: 'space-y-6 animate-in fade-in' },
-                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4' },
-                        DATA.overall.metrics.map((m, i) => 
-                            e('div', { key: i, className: 'bg-white p-6 rounded-2xl border border-slate-200 flex flex-col' },
-                                e('p', { className: 'text-[10px] font-black text-slate-400 uppercase mb-1' }, m.label),
-                                e('h3', { className: 'text-2xl font-black' }, m.val),
-                                e('p', { className: 'text-[10px] font-bold text-slate-500 uppercase mt-1' }, m.sub)
-                            )
-                        )
+                const PerformanceTab = e('div', { className: 'space-y-6' },
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-4' },
+                        StatCard('Trainer Knowledge', '4.97/5', 'Expertise Rating', 'text-blue-700'),
+                        StatCard('Clarity & Delivery', '4.93/5', 'Instructional Score', 'text-emerald-700'),
+                        StatCard('Content Relevance', '4.95/5', 'Classroom Ready', 'text-amber-600')
                     ),
                     e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                        e('div', { className: 'bg-white p-6 rounded-3xl border border-slate-200 h-80' },
-                            e('h3', { className: 'text-[10px] font-black uppercase mb-4 text-center' }, 'Instructional Quality'),
+                        e('div', { className: 'bg-white p-8 rounded-[2rem] border border-slate-200 h-96' },
+                            e('h3', { className: 'text-[11px] font-black uppercase mb-6 text-center' }, 'Core Competency Radar'),
                             e(ResponsiveContainer, { width: '100%', height: '90%' },
-                                e(RadarChart, { cx: '50%', cy: '50%', outerRadius: '80%', data: DATA.overall.radar },
+                                e(RadarChart, { data: [
+                                    { subject: 'Expertise', A: DATA.performance.expertise },
+                                    { subject: 'Clarity', A: DATA.performance.clarity },
+                                    { subject: 'Relevance', A: DATA.performance.relevance },
+                                    { subject: 'Pacing', A: DATA.performance.pacing },
+                                    { subject: 'Scottish Context', A: 5.0 }
+                                ]},
                                     e(PolarGrid),
                                     e(PolarAngleAxis, { dataKey: 'subject' }),
-                                    e(Radar, { dataKey: 'A', stroke: '#2563eb', fill: '#3b82f6', fillOpacity: 0.6 })
+                                    e(Radar, { dataKey: 'A', stroke: '#1d4ed8', fill: '#1d4ed8', fillOpacity: 0.5 })
                                 )
                             )
                         ),
-                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 flex flex-col justify-center gap-4' },
-                            e('div', { className: 'p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl' },
-                                e('p', { className: 'italic text-sm text-slate-700' }, '"The trainer demonstrated a deep understanding of AI in a Scottish context."')
-                            ),
-                            e('div', { className: 'p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl' },
-                                e('p', { className: 'italic text-sm text-slate-700' }, '"Relevant, classroom-ready examples that resonated with my daily practice."')
+                        e('div', { className: 'bg-slate-900 text-white p-8 rounded-[2rem] flex flex-col justify-center' },
+                            e('h3', { className: 'text-blue-400 text-[10px] font-black uppercase mb-4 tracking-widest' }, 'Attendee Voices'),
+                            e('div', { className: 'space-y-6' },
+                                [
+                                    "“The trainer has a deep understanding of AI in the Scottish context.”",
+                                    "“Relevant, classroom-ready examples that resonated with my daily practice.”",
+                                    "“Perfect balance between explanation and hands-on time.”"
+                                ].map((q, i) => e('p', { key: i, className: 'text-sm font-medium italic border-l-2 border-blue-500 pl-4 text-slate-300' }, q))
                             )
                         )
                     )
                 );
 
-                const ContentLearners = e('div', { className: 'space-y-6' },
-                    e('div', { className: 'bg-indigo-700 text-white p-10 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-8' },
-                        e('div', { className: 'max-w-xl text-center md:text-left' },
-                            e('h2', { className: 'text-3xl font-black mb-4 uppercase' }, 'Learner Usage & Ethics'),
-                            e('p', { className: 'text-indigo-100 text-sm' }, 'Teachers strongly support AI for accessibility, while requesting guidance on ethical usage within Glow.')
+                const ConfidenceTab = e('div', { className: 'space-y-6' },
+                    e('div', { className: 'bg-white p-8 rounded-[2rem] border border-slate-200' },
+                        e('h3', { className: 'text-[11px] font-black uppercase mb-8 text-center' }, 'Teacher Confidence Shift (Teaching with Gemini)'),
+                        e('div', { className: 'h-80' },
+                            e(ResponsiveContainer, { width: '100%', height: '100%' },
+                                e(BarChart, { data: DATA.confidence.teaching },
+                                    e(CartesianGrid, { strokeDasharray: '3 3', vertical: false }),
+                                    e(XAxis, { dataKey: 'name' }),
+                                    e(YAxis, { domain: [0, 5] }),
+                                    e(Tooltip),
+                                    e(Bar, { dataKey: 'score', fill: '#1d4ed8', radius: [8, 8, 0, 0], barSize: 60 })
+                                )
+                            )
                         ),
-                        e('div', { className: 'bg-white/10 p-6 rounded-2xl border border-white/20 text-center min-w-[160px]' },
-                            e('p', { className: 'text-5xl font-black' }, `${DATA.learners.comfort}%`),
-                            e('p', { className: 'text-[10px] font-bold uppercase mt-2' }, 'Comfort Score')
+                        e('p', { className: 'mt-6 text-center text-xs font-bold text-slate-400 uppercase tracking-widest' }, 'Significant confidence growth noted in prompt engineering and lesson drafting.')
+                    )
+                );
+
+                const LearnerTab = e('div', { className: 'space-y-6' },
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                        e('div', { className: 'bg-emerald-700 text-white p-10 rounded-[2.5rem] flex flex-col justify-center' },
+                            e('h2', { className: 'text-4xl font-black mb-4 tracking-tighter' }, `${DATA.confidence.learnerUseComfort}%`),
+                            e('p', { className: 'text-[10px] font-bold uppercase tracking-widest opacity-80' }, 'Staff Comfort Level'),
+                            e('p', { className: 'mt-4 text-sm font-medium' }, 'Teachers feel pupils should be using AI in Glow, provided there is guidance on accuracy and ethics.')
+                        ),
+                        e('div', { className: 'bg-blue-700 text-white p-10 rounded-[2.5rem] flex flex-col justify-center' },
+                            e('h2', { className: 'text-4xl font-black mb-4 tracking-tighter' }, `${DATA.confidence.asnImpact}%`),
+                            e('p', { className: 'text-[10px] font-bold uppercase tracking-widest opacity-80' }, 'ASN Support Benefit'),
+                            e('p', { className: 'mt-4 text-sm font-medium' }, 'Agreement that AI tools in Glow specifically bridge gaps for learners with additional support needs.')
                         )
                     ),
-                    e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 flex items-center gap-8' },
-                            e('div', { className: 'w-24 h-24 rounded-full border-8 border-indigo-100 border-t-indigo-600 flex items-center justify-center shrink-0' },
-                                e('span', { className: 'text-2xl font-black text-indigo-700' }, `${DATA.learners.asn}%`)
-                            ),
-                            e('p', { className: 'text-sm text-slate-500 font-medium italic' }, 'Believe AI tools specifically bridge the gap for learners with additional support needs.')
-                        ),
-                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 h-64' },
+                    e('div', { className: 'bg-white p-8 rounded-[2.5rem] border border-slate-200' },
+                        e('h3', { className: 'text-[11px] font-black uppercase mb-6 text-center' }, 'Sentiment: "Should learners use AI in class?"'),
+                        e('div', { className: 'h-64' },
                             e(ResponsiveContainer, { width: '100%', height: '100%' },
                                 e(PieChart, null,
-                                    e(Pie, { data: DATA.learners.sentiment, innerRadius: 50, outerRadius: 70, paddingAngle: 5, dataKey: 'value' },
-                                        DATA.learners.sentiment.map((entry, index) => e(Cell, { key: index, fill: COLORS[index % COLORS.length] }))
+                                    e(Pie, { data: DATA.learnerSentiment, innerRadius: 60, outerRadius: 90, paddingAngle: 5, dataKey: 'value' },
+                                        DATA.learnerSentiment.map((entry, index) => e(Cell, { key: index, fill: COLORS[index % COLORS.length] }))
                                     ),
                                     e(Tooltip),
-                                    e(Legend)
+                                    e(Legend, { verticalAlign: 'bottom' })
                                 )
                             )
                         )
                     )
                 );
 
-                const ContentSessions = e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 h-96' },
-                    e('h3', { className: 'text-[10px] font-black uppercase mb-8 text-center' }, 'Confidence Growth (Scale 1-5)'),
-                    e(ResponsiveContainer, { width: '100%', height: '80%' },
-                        e(BarChart, { data: DATA.confidence },
-                            e(CartesianGrid, { strokeDasharray: '3 3', vertical: false }),
-                            e(XAxis, { dataKey: 'name' }),
-                            e(YAxis, { domain: [0, 5] }),
-                            e(Tooltip),
-                            e(Bar, { dataKey: 'val', fill: '#3b82f6', radius: [6, 6, 0, 0], barSize: 60 })
+                const RoadmapTab = e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                    e('div', { className: 'bg-white p-8 rounded-[2.5rem] border border-slate-200' },
+                        e('h3', { className: 'text-[11px] font-black uppercase mb-6 text-blue-700' }, 'Attendee Professional Learning Needs'),
+                        e('div', { className: 'space-y-4' },
+                            [
+                                { label: 'Webinars', val: 45 },
+                                { label: 'Self-Paced Guides', val: 30 },
+                                { label: 'In-Person Demo', val: 25 }
+                            ].map((item, i) => e('div', { key: i },
+                                e('div', { className: 'flex justify-between text-[10px] font-bold uppercase mb-1' }, 
+                                    e('span', null, item.label), e('span', null, `${item.val}%`)
+                                ),
+                                e('div', { className: 'w-full bg-slate-100 h-2 rounded-full' },
+                                    e('div', { className: 'bg-blue-600 h-full rounded-full', style: { width: `${item.val}%` } })
+                                )
+                            ))
+                        )
+                    ),
+                    e('div', { className: 'bg-slate-900 text-white p-8 rounded-[2.5rem]' },
+                        e('h3', { className: 'text-amber-500 text-[11px] font-black uppercase mb-6 tracking-widest' }, 'Strategic Next Steps'),
+                        e('div', { className: 'space-y-4' },
+                            DATA.nextSteps.map((step, i) => e('div', { key: i, className: 'flex gap-4 items-start' },
+                                e('div', { className: 'w-6 h-6 bg-slate-800 text-amber-500 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border border-slate-700' }, i+1),
+                                e('p', { className: 'text-sm text-slate-300 font-medium' }, step)
+                            ))
                         )
                     )
                 );
 
-                const ContentNext = e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
-                    e('div', { className: 'bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl flex flex-col justify-center' },
-                        e('h3', { className: 'text-emerald-400 text-xs font-black uppercase mb-6 tracking-widest' }, 'Strategic Roadmap'),
-                        e('div', { className: 'space-y-4' },
-                            DATA.next.map((p, i) => 
-                                e('div', { key: i, className: 'flex gap-4' },
-                                    e('div', { className: 'w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold shrink-0' }, i + 1),
-                                    e('p', { className: 'text-sm text-slate-300' }, p)
-                                )
+                return e('div', { className: 'pb-20' },
+                    e('header', { className: 'bg-white border-b border-slate-200 sticky top-0 z-50 py-4 shadow-sm' },
+                        e('div', { className: 'max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4' },
+                            e('div', null,
+                                e('h1', { className: 'text-xl font-black text-blue-800 tracking-tighter uppercase' }, 'Gemini Teacher Series Impact'),
+                                e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest' }, 'Education Technology Coaching • Scotland')
+                            ),
+                            e('nav', { className: 'flex bg-slate-100 p-1 rounded-2xl gap-1 overflow-x-auto max-w-full' },
+                                [
+                                    { id: 'how-you-did', label: 'Trainer Performance' },
+                                    { id: 'how-they-feel', label: 'Staff Confidence' },
+                                    { id: 'learners', label: 'Learner Sentiment' },
+                                    { id: 'next', label: 'What\'s Next' }
+                                ].map(t => NavButton(t.id, t.label))
                             )
                         )
                     ),
-                    e('div', { className: 'bg-white p-8 rounded-[2rem] border border-slate-200 flex flex-col justify-center items-center text-center' },
-                        e('h3', { className: 'font-black text-xl mb-4' }, 'Ongoing Support'),
-                        e('p', { className: 'text-sm text-slate-500 mb-6' }, 'Participants requested more webinars and classroom-ready templates for Google Workspace.'),
-                        e('div', { className: 'flex flex-wrap gap-2 justify-center' },
-                            ['Webinars (45%)', 'Self-Paced (30%)', 'Classroom Examples (25%)'].map(tag => 
-                                e('span', { key: tag, className: 'px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold' }, tag)
-                            )
-                        )
-                    )
-                );
-
-                return e('div', null,
-                    Header,
                     e('main', { className: 'max-w-6xl mx-auto px-4 mt-8' },
-                        tab === 'overall' && ContentOverall,
-                        tab === 'learners' && ContentLearners,
-                        tab === 'sessions' && ContentSessions,
-                        tab === 'next' && ContentNext
+                        tab === 'how-you-did' && PerformanceTab,
+                        tab === 'how-they-feel' && ConfidenceTab,
+                        tab === 'learners' && LearnerTab,
+                        tab === 'next' && RoadmapTab
+                    ),
+                    e('footer', { className: 'mt-20 text-center' },
+                        e('div', { className: 'inline-flex items-center gap-4 px-6 py-2 bg-white rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-200' },
+                            e('span', null, 'EdTech Coaching Impact v3.0'),
+                            e('span', { className: 'w-1 h-1 bg-slate-300 rounded-full' }),
+                            e('span', null, 'Scottish Education Context')
+                        )
                     )
                 );
             };
@@ -215,7 +255,6 @@
             root.render(e(App));
         };
 
-        // Start checking for libraries
         window.onload = initApp;
     </script>
 </body>
