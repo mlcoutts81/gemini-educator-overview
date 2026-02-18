@@ -4,259 +4,219 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Teacher Series Impact Report</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS - High Reliability CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for browser-side JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Recharts and its dependency Prop-Types -->
-    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <!-- React & Charting Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .recharts-text { font-size: 10px; font-weight: 600; fill: #64748b; }
-        .tab-active { background-color: white; color: #1d4ed8; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
-        .loading-screen { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        .tab-active { background-color: white; color: #1d4ed8; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        .loading-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+        .btn-tab { transition: all 0.2s; border: 1px solid transparent; }
     </style>
 </head>
 <body>
     <div id="root">
         <div class="loading-screen">
-            <div class="text-center">
-                <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Dashboard...</p>
-            </div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Initializing Dashboard...</p>
         </div>
     </div>
 
-    <script type="text/babel">
-        const { 
-            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-            PieChart, Cell, Pie, RadarChart, PolarGrid, PolarAngleAxis, Radar 
-        } = window.Recharts;
+    <script>
+        // Use a "wait for ready" strategy to prevent crashes
+        const initApp = () => {
+            if (!window.Recharts || !window.React || !window.ReactDOM) {
+                console.log("Libraries not ready, retrying...");
+                setTimeout(initApp, 100);
+                return;
+            }
 
-        // Simple SVG Icons to ensure no external icon library crashes the app
-        const Icon = ({ name, className = "" }) => {
-            const icons = {
-                award: <path d="M12 15l-3.39 1.89l.65-3.78L6.51 10.5l3.79-.55L12 6.5l1.7 3.45l3.79.55l-2.75 2.11l.65 3.78z" />,
-                lightbulb: <path d="M9 18h6m-3-15a7 7 0 0 0-7 7c0 2.5 2 4.5 2 7h10c0-2.5 2-4.5 2-7a7 7 0 0 0-7-7z" />,
-                users: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m14 10v-2a4 4 0 0 0-3-3.87m-4-12a4 4 0 1 1 0 8" />,
-                clock: <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />,
-                target: <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />,
-                accessibility: <circle cx="12" cy="4" r="1" /><path d="m18 19l-1.5-6l-4.5-1l-4.5 1l-1.5 6m12-11l-4.5 1l-4.5-1m4.5 1v5m0 0l-2 5m2-5l2 5" />
-            };
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name] || <circle cx="12" cy="12" r="10" />}
-                </svg>
-            );
-        };
+            const React = window.React;
+            const e = React.createElement;
+            const { 
+                BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+                PieChart, Cell, Pie, RadarChart, PolarGrid, PolarAngleAxis, Radar 
+            } = window.Recharts;
 
-        const DATA = {
-            overall: {
-                metrics: [
-                    { icon: 'award', title: 'Expertise', value: '4.9/5', sub: 'Technical Knowledge', color: 'bg-blue-50 text-blue-600' },
-                    { icon: 'lightbulb', title: 'Clarity', value: '4.8/5', sub: 'Instruction', color: 'bg-emerald-50 text-emerald-600' },
-                    { icon: 'users', title: 'Engagement', value: '4.8/5', sub: 'Relevance', color: 'bg-indigo-50 text-indigo-600' },
-                    { icon: 'clock', title: 'Pacing', value: '4.7/5', sub: 'Hands-on Time', color: 'bg-amber-50 text-amber-600' }
+            const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+
+            const DATA = {
+                overall: {
+                    metrics: [
+                        { label: 'Expertise', val: '4.9/5', sub: 'Tech Knowledge', color: 'bg-blue-50 text-blue-600' },
+                        { label: 'Clarity', val: '4.8/5', sub: 'Instruction', color: 'bg-emerald-50 text-emerald-600' },
+                        { label: 'Engagement', val: '4.8/5', sub: 'Relevance', color: 'bg-indigo-50 text-indigo-600' },
+                        { label: 'Pacing', val: '4.7/5', sub: 'Hands-on Time', color: 'bg-amber-50 text-amber-600' }
+                    ],
+                    radar: [
+                        { subject: 'Expertise', A: 4.9 }, { subject: 'Clarity', A: 4.8 }, 
+                        { subject: 'Engagement', A: 4.8 }, { subject: 'Pacing', A: 4.7 }, 
+                        { subject: 'Examples', A: 4.9 }
+                    ]
+                },
+                learners: {
+                    comfort: 78, asn: 94,
+                    sentiment: [
+                        { name: 'Future Careers', value: 42 }, { name: 'Value Skills/Unready', value: 35 }, 
+                        { name: 'Support Needed', value: 18 }, { name: 'Cautious', value: 5 }
+                    ]
+                },
+                confidence: [
+                    { name: 'S1 Pre', val: 1.8 }, { name: 'S1 Post', val: 4.2 },
+                    { name: 'S3 Pre', val: 2.1 }, { name: 'S3 Post', val: 4.4 }
                 ],
-                radar: [
-                    { subject: 'Expertise', A: 4.9 }, { subject: 'Clarity', A: 4.8 }, 
-                    { subject: 'Engagement', A: 4.8 }, { subject: 'Pacing', A: 4.7 }, 
-                    { subject: 'Examples', A: 4.9 }
-                ]
-            },
-            learners: {
-                comfort: 78,
-                asn: 94,
-                sentiment: [
-                    { name: 'Future Careers', value: 42 }, { name: 'Value Skills/Unready', value: 35 }, 
-                    { name: 'Support Needed', value: 18 }, { name: 'Cautious', value: 5 }
-                ]
-            },
-            confidence: [
-                { name: 'S1 Pre', val: 1.8 }, { name: 'S1 Post', val: 4.2 },
-                { name: 'S3 Pre', val: 2.1 }, { name: 'S3 Post', val: 4.4 }
-            ],
-            next: {
-                formats: [{ name: 'Webinars', value: 45 }, { name: 'Self-Paced', value: 30 }, { name: 'Examples', value: 25 }],
-                priorities: [
+                next: [
                     "Subject-specific prompting for CfE levels",
                     "Google Classroom workflow integration",
                     "Ethical AI guidelines for pupil usage",
                     "ASN-specific accessibility walkthroughs"
                 ]
-            }
-        };
+            };
 
-        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+            const App = () => {
+                const [tab, setTab] = React.useState('overall');
 
-        const App = () => {
-            const [tab, setTab] = React.useState('overall');
+                const Header = e('header', { className: 'bg-white border-b border-slate-200 sticky top-0 z-50 py-4 shadow-sm' },
+                    e('div', { className: 'max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4' },
+                        e('div', null,
+                            e('h1', { className: 'text-xl font-black text-blue-700 uppercase tracking-tighter' }, 'Gemini Teacher Impact'),
+                            e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest' }, 'Education Technology Coach • Scotland')
+                        ),
+                        e('nav', { className: 'flex bg-slate-100 p-1 rounded-xl gap-1' },
+                            ['overall', 'learners', 'sessions', 'next'].map(t => 
+                                e('button', {
+                                    key: t,
+                                    onClick: () => setTab(t),
+                                    className: `px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider btn-tab ${tab === t ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`
+                                }, t === 'next' ? 'Next Steps' : t)
+                            )
+                        )
+                    )
+                );
 
-            return (
-                <div className="min-h-screen">
-                    <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-                        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-xl font-black text-blue-700 tracking-tighter uppercase">Gemini Teacher Impact</h1>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">EdTech Coaching Scotland</p>
-                            </div>
-                            <nav className="flex bg-slate-100 p-1 rounded-xl gap-1">
-                                {['overall', 'learners', 'sessions', 'next'].map(t => (
-                                    <button 
-                                        key={t}
-                                        onClick={() => setTab(t)}
-                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === t ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`}
-                                    >
-                                        {t === 'next' ? 'Next Steps' : t}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-                    </header>
+                const ContentOverall = e('div', { className: 'space-y-6 animate-in fade-in' },
+                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4' },
+                        DATA.overall.metrics.map((m, i) => 
+                            e('div', { key: i, className: 'bg-white p-6 rounded-2xl border border-slate-200 flex flex-col' },
+                                e('p', { className: 'text-[10px] font-black text-slate-400 uppercase mb-1' }, m.label),
+                                e('h3', { className: 'text-2xl font-black' }, m.val),
+                                e('p', { className: 'text-[10px] font-bold text-slate-500 uppercase mt-1' }, m.sub)
+                            )
+                        )
+                    ),
+                    e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                        e('div', { className: 'bg-white p-6 rounded-3xl border border-slate-200 h-80' },
+                            e('h3', { className: 'text-[10px] font-black uppercase mb-4 text-center' }, 'Instructional Quality'),
+                            e(ResponsiveContainer, { width: '100%', height: '90%' },
+                                e(RadarChart, { cx: '50%', cy: '50%', outerRadius: '80%', data: DATA.overall.radar },
+                                    e(PolarGrid),
+                                    e(PolarAngleAxis, { dataKey: 'subject' }),
+                                    e(Radar, { dataKey: 'A', stroke: '#2563eb', fill: '#3b82f6', fillOpacity: 0.6 })
+                                )
+                            )
+                        ),
+                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 flex flex-col justify-center gap-4' },
+                            e('div', { className: 'p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl' },
+                                e('p', { className: 'italic text-sm text-slate-700' }, '"The trainer demonstrated a deep understanding of AI in a Scottish context."')
+                            ),
+                            e('div', { className: 'p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl' },
+                                e('p', { className: 'italic text-sm text-slate-700' }, '"Relevant, classroom-ready examples that resonated with my daily practice."')
+                            )
+                        )
+                    )
+                );
 
-                    <main className="max-w-6xl mx-auto px-4 mt-8">
-                        {tab === 'overall' && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {DATA.overall.metrics.map((m, i) => (
-                                        <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
-                                            <div className={`p-3 rounded-xl ${m.color}`}><Icon name={m.icon} /></div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{m.title}</p>
-                                                <h3 className="text-2xl font-black text-slate-900">{m.value}</h3>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">{m.sub}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                                        <h3 className="text-sm font-black uppercase tracking-widest mb-6">Instructional Quality Radar</h3>
-                                        <div className="h-64">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={DATA.overall.radar}>
-                                                    <PolarGrid />
-                                                    <PolarAngleAxis dataKey="subject" />
-                                                    <Radar dataKey="A" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.6} />
-                                                </RadarChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                                        <h3 className="text-sm font-black uppercase tracking-widest mb-4">Feedback Highlights</h3>
-                                        <div className="space-y-4">
-                                            <p className="p-4 bg-slate-50 border-l-4 border-blue-500 rounded-r-xl italic text-slate-600 text-sm">"The trainer demonstrated a deep understanding of AI in a Scottish context."</p>
-                                            <p className="p-4 bg-slate-50 border-l-4 border-emerald-500 rounded-r-xl italic text-slate-600 text-sm">"Relevant, classroom-ready examples that resonated with my daily practice."</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                const ContentLearners = e('div', { className: 'space-y-6' },
+                    e('div', { className: 'bg-indigo-700 text-white p-10 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center gap-8' },
+                        e('div', { className: 'max-w-xl text-center md:text-left' },
+                            e('h2', { className: 'text-3xl font-black mb-4 uppercase' }, 'Learner Usage & Ethics'),
+                            e('p', { className: 'text-indigo-100 text-sm' }, 'Teachers strongly support AI for accessibility, while requesting guidance on ethical usage within Glow.')
+                        ),
+                        e('div', { className: 'bg-white/10 p-6 rounded-2xl border border-white/20 text-center min-w-[160px]' },
+                            e('p', { className: 'text-5xl font-black' }, `${DATA.learners.comfort}%`),
+                            e('p', { className: 'text-[10px] font-bold uppercase mt-2' }, 'Comfort Score')
+                        )
+                    ),
+                    e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 flex items-center gap-8' },
+                            e('div', { className: 'w-24 h-24 rounded-full border-8 border-indigo-100 border-t-indigo-600 flex items-center justify-center shrink-0' },
+                                e('span', { className: 'text-2xl font-black text-indigo-700' }, `${DATA.learners.asn}%`)
+                            ),
+                            e('p', { className: 'text-sm text-slate-500 font-medium italic' }, 'Believe AI tools specifically bridge the gap for learners with additional support needs.')
+                        ),
+                        e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 h-64' },
+                            e(ResponsiveContainer, { width: '100%', height: '100%' },
+                                e(PieChart, null,
+                                    e(Pie, { data: DATA.learners.sentiment, innerRadius: 50, outerRadius: 70, paddingAngle: 5, dataKey: 'value' },
+                                        DATA.learners.sentiment.map((entry, index) => e(Cell, { key: index, fill: COLORS[index % COLORS.length] }))
+                                    ),
+                                    e(Tooltip),
+                                    e(Legend)
+                                )
+                            )
+                        )
+                    )
+                );
 
-                        {tab === 'learners' && (
-                            <div className="space-y-6">
-                                <div className="bg-indigo-700 text-white p-10 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row justify-between items-center gap-8">
-                                    <div className="max-w-xl">
-                                        <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">Learner Usage & Ethics</h2>
-                                        <p className="text-indigo-100 text-sm font-medium leading-relaxed">Teachers overwhelmingly support AI as an accessibility tool, though many request more specific guidance on ethical student usage policies within Glow.</p>
-                                    </div>
-                                    <div className="bg-white/10 p-6 rounded-2xl border border-white/20 text-center min-w-[160px]">
-                                        <p className="text-5xl font-black tracking-tighter">{DATA.learners.comfort}%</p>
-                                        <p className="text-[10px] font-bold uppercase mt-2 tracking-widest">Comfort Score</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-8">
-                                        <div className="w-32 h-32 rounded-full border-[12px] border-indigo-100 border-t-indigo-600 flex items-center justify-center shrink-0">
-                                            <span className="text-3xl font-black text-indigo-700">{DATA.learners.asn}%</span>
-                                        </div>
-                                        <p className="text-sm text-slate-500 font-medium italic leading-relaxed">Teachers believe AI tools specifically bridge the gap for learners with additional support needs.</p>
-                                    </div>
-                                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                                        <h3 className="text-sm font-black uppercase tracking-widest mb-4 text-center">Staff Sentiment</h3>
-                                        <div className="h-48">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie data={DATA.learners.sentiment} innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
-                                                        {DATA.learners.sentiment.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                                    </Pie>
-                                                    <Tooltip />
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                const ContentSessions = e('div', { className: 'bg-white p-8 rounded-3xl border border-slate-200 h-96' },
+                    e('h3', { className: 'text-[10px] font-black uppercase mb-8 text-center' }, 'Confidence Growth (Scale 1-5)'),
+                    e(ResponsiveContainer, { width: '100%', height: '80%' },
+                        e(BarChart, { data: DATA.confidence },
+                            e(CartesianGrid, { strokeDasharray: '3 3', vertical: false }),
+                            e(XAxis, { dataKey: 'name' }),
+                            e(YAxis, { domain: [0, 5] }),
+                            e(Tooltip),
+                            e(Bar, { dataKey: 'val', fill: '#3b82f6', radius: [6, 6, 0, 0], barSize: 60 })
+                        )
+                    )
+                );
 
-                        {tab === 'sessions' && (
-                            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                                <h3 className="text-sm font-black uppercase tracking-widest mb-8 text-center">Confidence Growth Across Series</h3>
-                                <div className="h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={DATA.confidence}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                            <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 'bold' }} />
-                                            <YAxis domain={[0, 5]} />
-                                            <Tooltip />
-                                            <Bar dataKey="val" radius={[6, 6, 0, 0]} fill="#3b82f6" barSize={60} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        )}
+                const ContentNext = e('div', { className: 'grid grid-cols-1 lg:grid-cols-2 gap-6' },
+                    e('div', { className: 'bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl flex flex-col justify-center' },
+                        e('h3', { className: 'text-emerald-400 text-xs font-black uppercase mb-6 tracking-widest' }, 'Strategic Roadmap'),
+                        e('div', { className: 'space-y-4' },
+                            DATA.next.map((p, i) => 
+                                e('div', { key: i, className: 'flex gap-4' },
+                                    e('div', { className: 'w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold shrink-0' }, i + 1),
+                                    e('p', { className: 'text-sm text-slate-300' }, p)
+                                )
+                            )
+                        )
+                    ),
+                    e('div', { className: 'bg-white p-8 rounded-[2rem] border border-slate-200 flex flex-col justify-center items-center text-center' },
+                        e('h3', { className: 'font-black text-xl mb-4' }, 'Ongoing Support'),
+                        e('p', { className: 'text-sm text-slate-500 mb-6' }, 'Participants requested more webinars and classroom-ready templates for Google Workspace.'),
+                        e('div', { className: 'flex flex-wrap gap-2 justify-center' },
+                            ['Webinars (45%)', 'Self-Paced (30%)', 'Classroom Examples (25%)'].map(tag => 
+                                e('span', { key: tag, className: 'px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold' }, tag)
+                            )
+                        )
+                    )
+                );
 
-                        {tab === 'next' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-                                    <h3 className="text-sm font-black uppercase tracking-widest mb-6">Future Support Requests</h3>
-                                    <div className="h-64">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie data={DATA.next.formats} dataKey="value" label={({name}) => name}>
-                                                    {DATA.next.formats.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                                </Pie>
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </div>
-                                <div className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl">
-                                    <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-emerald-400">Strategic Roadmap</h3>
-                                    <div className="space-y-4">
-                                        {DATA.next.priorities.map((p, i) => (
-                                            <div key={i} className="flex gap-4 items-start">
-                                                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold shrink-0">{i+1}</div>
-                                                <p className="text-sm text-slate-300 font-medium leading-relaxed">{p}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </main>
+                return e('div', null,
+                    Header,
+                    e('main', { className: 'max-w-6xl mx-auto px-4 mt-8' },
+                        tab === 'overall' && ContentOverall,
+                        tab === 'learners' && ContentLearners,
+                        tab === 'sessions' && ContentSessions,
+                        tab === 'next' && ContentNext
+                    )
+                );
+            };
 
-                    <footer className="mt-20 py-8 text-center border-t border-slate-200 bg-white">
-                        <div className="inline-flex items-center gap-4 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            <span>Accessible Dashboard v2.5</span>
-                            <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                            <span>Powered by React & Recharts</span>
-                        </div>
-                    </footer>
-                </div>
-            );
-        };
-
-        // Render with error handling to help debug if it still fails
-        try {
             const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
-        } catch (e) {
-            document.getElementById('root').innerHTML = `<div class="p-10 text-red-600 font-bold">Error loading dashboard: ${e.message}</div>`;
-        }
+            root.render(e(App));
+        };
+
+        // Start checking for libraries
+        window.onload = initApp;
     </script>
 </body>
 </html>
